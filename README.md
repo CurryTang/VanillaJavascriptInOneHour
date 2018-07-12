@@ -250,3 +250,223 @@ function* fib(max) {
     return;
 }
 ```
+
+## Level 3
+Before ES6, no class keywords, and we use prototypes to do OOP.
+
+There are several methods to implement inheritance.
+```
+var Student = {
+    name: 'name',
+    age: 15,
+    ability: function(x) {
+        console.log(`${this.name} always studies hard`);
+    }
+}
+
+function newStudent(name) {
+    var s = Object.create(Student);
+    s.name = name;
+    return s;
+}
+
+var shuaige = newStudent('shuaige');
+shuaige.ability();
+```
+
+![Help to understand prototype](https://cdn.liaoxuefeng.com/cdn/files/attachments/00143529922671163eebb527bc14547ac11363bf186557d000/l)
+```
+// constructor function
+
+function Boy(name) {
+    this.name = name;
+    this.hello = function() {
+        console.log('Hello, ' + this.name);
+    }
+}
+
+var cxk = new Boy('cxk');
+console.log(cxk.name);
+cxk.hello();
+
+// the relationship:
+// cxk ----> Student.prototype ----> Object.prototype ----> null
+
+```
+
+
+Better logic:
+![](https://cdn.liaoxuefeng.com/cdn/files/attachments/001435299854512faf32868f60348be878982909b5a5d04000/l)
+```
+function Student(name) {
+    this.name = name;
+}
+
+Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+};
+```
+
+Implementing inheritance:
+
+![](https://cdn.liaoxuefeng.com/cdn/files/attachments/001439872160923ca15925ec79f4692a98404ddb2ed5503000/l)
+```
+function Boy(props) {
+    this.name = props.name || 'sxc';
+}
+
+Boy.prototype.hello = function() {
+    console.log(`Hello, ${this.name}`);
+}
+
+var cxk = new Boy('cxk');
+console.log(cxk.name);
+cxk.hello();
+
+// the relationship:
+// cxk ----> Student.prototype ----> Object.prototype ----> null
+
+function sillyBoy(props) {
+    Boy.call(this, props);
+    this.grade = props.grade || 1;
+}
+
+function F() {}
+
+F.prototype = Boy.prototype;
+
+sillyBoy.prototype = new F();
+
+sillyBoy.prototype.constructor = sillyBoy;
+
+sillyBoy.prototype.fuckSelf = function() {
+    console.log(`${this.name} fucks himself`);
+}
+
+sillyBoy.prototype.getGrade = function() {
+    return this.grade;
+}
+
+var sxc = new sillyBoy({
+    name: 'xiaochuan'
+})
+
+console.log(sxc.name);
+console.log(sxc.getGrade());
+```
+
+Inherit function
+```
+function inherits(Child, Parent) {
+    var F = function () {};
+    F.prototype = Parent.prototype;
+    Child.prototype = new F();
+    Child.prototype.constructor = Child;
+}
+```
+Finally, in ES6, you can use class keyword.
+
+## Level 4
+The part about DOM is trivial and boring, you can use jQuery to simplify the work. I'll only take down some interesting parts in the tutorial.
+
+Deal with password form
+```
+<form id="login-form" method="post" onsubmit="return checkForm()">
+    <input type="text" id="username" name="username">
+    <input type="password" id="input-password">
+    <input type="hidden" id="md5-password" name="password">
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+function checkForm() {
+    var input_pwd = document.getElementById('input-password');
+    var md5_pwd = document.getElementById('md5-password');
+    // 把用户输入的明文变为MD5:
+    md5_pwd.value = toMD5(input_pwd.value);
+    // 继续下一步:
+    return true;
+}
+</script>
+```
+Note: input form without name property won't be submitted.
+
+## Level 5
+We will then talk about async Javascript.
+
+### Ajax
+
+```
+function success(text) {
+    var textarea = document.getElementById('test-response-text');
+    textarea.value = text;
+}
+
+function fail(code) {
+    var textarea = document.getElementById('test-response-text');
+    textarea.value = 'Error code: ' + code;
+}
+
+var request = new XMLHttpRequest(); // 新建XMLHttpRequest对象
+
+request.onreadystatechange = function () { // 状态发生变化时，函数被回调
+    if (request.readyState === 4) { // 成功完成
+        // 判断响应结果:
+        if (request.status === 200) {
+            // 成功，通过responseText拿到响应的文本:
+            return success(request.responseText);
+        } else {
+            // 失败，根据响应码判断失败原因:
+            return fail(request.status);
+        }
+    } else {
+        // HTTP请求还在继续...
+    }
+}
+
+// 发送请求:
+request.open('GET', '/api/categories');
+request.send();
+```
+
+### Promise
+```
+function test(resolve, reject) {
+    var timeOut = Math.random() * 2;
+    console.log(`set timeout ${timeOut} seconds`);
+    setTimeout(
+        function() {
+            if (timeOut < 1) {
+                console.log('resolve');
+                resolve('200 OK');
+            } else {
+                console.log('reject');
+                reject(`timeout in ${timeOut} seconds`);
+            }
+        },
+        timeOut * 1000
+    )
+}
+
+var promise = new Promise(test);
+promise.then(function(result) {
+    console.log(`success ${result}`);
+}).catch(function(reason) {
+    console.log(`fail ${result}`);
+})
+```
+## Level 6
+Final part is about error handling. 
+The structure of error handling is try...catch..finally, very similar to other language.
+Moreover, you can throw an error using throw new Error(some descriptions).
+When dealing with async error, never use something like this
+
+```
+try{
+  settimeout(something, some time)
+}catch{
+
+}
+```
+
+you should put try catch block inside async function's logical block
